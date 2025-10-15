@@ -1,0 +1,28 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+
+# Development
+*.log
+*.md
+.env*
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# IMPORTANT: Never ignore these files
+!package.json
+!pnpm-lock.yaml
+!tsconfig.json
+!tsconfig.node.json
+!vite.config.ts
+!tailwind.config.js
+!nginx.conf
+
