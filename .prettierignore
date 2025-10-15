@@ -1,15 +1,12 @@
-# Ignore build outputs
-dist/
-build/
-coverage/
-
-# Ignore dependencies
-node_modules/
-
-# Ignore generated files
+node_modules
+dist
+build
+coverage
 *.min.js
 *.min.css
-
-# Ignore data
-data/
-*.db
+pnpm-lock.yaml
+package-lock.json
+.next
+.cache
+public
+.husky
