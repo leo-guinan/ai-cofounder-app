@@ -1,0 +1,64 @@
+version: '3.8'
+
+# Production configuration
+# Generated: 2025-10-15T12:52:46.130532
+
+services:
+  backend:
+    build: ./backend
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - /etc/ai-cofounder/secrets.env
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  frontend:
+    build: ./frontend
+    restart: always
+    volumes:
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  telemetry:
+    build: ./telemetry
+    restart: always
+    volumes:
+      - ./data:/app/data
+    env_file:
+      - /etc/ai-cofounder/secrets.env
+    environment:
+      - NODE_ID=production-178-156-207-21
+      - CENTRAL_URL=http://backend:3000
+    depends_on:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  default:
+    name: ai-cofounder-network

@@ -1,0 +1,46 @@
+name: Waterfall Progression Trigger
+
+# Triggers Mastra workflow when waterfall branches change
+on:
+  push:
+    branches:
+      - requirements
+      - analysis
+      - design
+      - implementation
+      - 'implementation/**'
+      - testing
+      - validation
+
+jobs:
+  trigger-waterfall:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for decision checking
+      
+      - name: Detect stage
+        id: stage
+        run: |
+          BRANCH=${GITHUB_REF##*/}
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          
+          # Extract base stage (handle implementation/develop)
+          STAGE=$(echo $BRANCH | cut -d'/' -f1)
+          echo "stage=$STAGE" >> $GITHUB_OUTPUT
+      
+      - name: Trigger Mastra Workflow
+        run: |
+          curl -X POST https://central.aicofounder.com/api/workflows/trigger \
+            -H "Authorization: Bearer ${{ secrets.MASTRA_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "workflow": "waterfall-progression",
+              "repository": "${{ github.repository }}",
+              "branch": "${{ steps.stage.outputs.branch }}",
+              "stage": "${{ steps.stage.outputs.stage }}",
+              "commit": "${{ github.sha }}"
+            }'
