@@ -42,13 +42,15 @@ npm install
 cp .env.example .env
 nano .env  # Add your OPENAI_API_KEY
 
-# 3. Run
-docker-compose up
+# 3. Run (using modern Docker Compose V2)
+docker compose up
 
 # Access:
 #   Frontend: http://localhost
 #   Backend:  http://localhost:3000
 ```
+
+**Note**: Modern Docker uses `docker compose` (space) instead of `docker-compose` (hyphen)
 
 ### Production (Hetzner VPS)
 
@@ -59,9 +61,9 @@ nano /etc/ai-cofounder/secrets.env
 chmod 600 /etc/ai-cofounder/secrets.env
 
 # 2. Deploy
-docker-compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml up -d
 
-# Cost: ~$5-10/month
+# Cost: ~$5/month
 ```
 
 ## 🏗️ Architecture
