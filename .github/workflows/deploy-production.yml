@@ -30,8 +30,10 @@ jobs:
             # Navigate to deployment directory
             cd /opt/ai-cofounder
             
-            # Pull latest changes
+            # Reset any local changes and pull latest
             echo "📥 Pulling latest code from main..."
+            git reset --hard HEAD
+            git clean -fd
             git pull origin main
             
             # Rebuild and restart services
