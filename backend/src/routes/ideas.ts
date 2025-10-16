@@ -67,32 +67,40 @@ export async function ideasRoutes(fastify: FastifyInstance) {
       fastify.log.info(`Creating idea: ${name} for user: ${userId}`);
       
       // Execute Create Idea Workflow
-      const workflowResult = await createIdeaWorkflow.execute({
-        name: name.trim(),
-        description: description.trim(),
-        userId,
-        githubToken,
-        githubUser
+      const workflowExecution = await createIdeaWorkflow.createRun();
+      const workflowResult = await workflowExecution.start({
+        triggerData: {
+          name: name.trim(),
+          description: description.trim(),
+          userId,
+          githubToken,
+          githubUser
+        }
       });
       
-      if (!workflowResult.success) {
+      // Get workflow results from final step
+      const createRepoResult = workflowResult.results?.['create-github-repo'] || {};
+      const branchesResult = workflowResult.results?.['create-waterfall-branches'] || {};
+      const ideaRecordResult = workflowResult.results?.['create-idea-record'] || {};
+      
+      if (!createRepoResult.repoName) {
         return reply.status(500).send({
           success: false,
           error: 'Failed to create idea',
-          details: workflowResult.error
+          details: 'Workflow did not complete successfully'
         });
       }
       
       // Store in database (simplified for now)
       const idea = {
-        id: workflowResult.ideaId,
+        id: ideaRecordResult.ideaId || `idea-${Date.now()}`,
         userId,
         name: name.trim(),
         description: description.trim(),
-        repoName: workflowResult.repoName,
-        repoUrl: workflowResult.repoUrl,
+        repoName: createRepoResult.repoName,
+        repoUrl: createRepoResult.repoUrl,
         currentStage: 'requirements',
-        branches: workflowResult.branches,
+        branches: branchesResult.branches || [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -231,25 +239,32 @@ export async function ideasRoutes(fastify: FastifyInstance) {
       fastify.log.info(`Executing ${stage} workflow for idea: ${id}`);
       
       // Execute appropriate workflow based on stage
+      let workflowExecution;
       let workflowResult;
       
       switch (stage) {
         case 'requirements':
-          workflowResult = await requirementsWorkflow.execute({
-            repoName: idea.repoName,
-            githubToken,
-            githubUser,
-            ideaDescription: idea.description,
-            founderContext: { userId }
+          workflowExecution = await requirementsWorkflow.createRun();
+          workflowResult = await workflowExecution.start({
+            triggerData: {
+              repoName: idea.repoName,
+              githubToken,
+              githubUser,
+              ideaDescription: idea.description,
+              founderContext: { userId }
+            }
           });
           break;
           
         case 'analysis':
-          workflowResult = await analysisWorkflow.execute({
-            repoName: idea.repoName,
-            githubToken,
-            githubUser,
-            requirementsContext: { /* would load from requirements branch */ }
+          workflowExecution = await analysisWorkflow.createRun();
+          workflowResult = await workflowExecution.start({
+            triggerData: {
+              repoName: idea.repoName,
+              githubToken,
+              githubUser,
+              requirementsContext: { /* would load from requirements branch */ }
+            }
           });
           break;
           
@@ -260,8 +275,12 @@ export async function ideasRoutes(fastify: FastifyInstance) {
           });
       }
       
+      // Extract completion status from workflow results
+      const validationResult = workflowResult.results?.['validate-completeness'] || {};
+      const summaryResult = workflowResult.results?.['create-stage-summary'] || {};
+      
       // Update idea stage in database if workflow completed
-      if (workflowResult.complete && workflowResult.readyForNextStage) {
+      if (validationResult.complete && summaryResult.readyForNextStage) {
         // TODO: Update database
         // await db.update(ideas).set({ currentStage: getNextStage(stage) }).where(eq(ideas.id, id));
       }
@@ -270,11 +289,11 @@ export async function ideasRoutes(fastify: FastifyInstance) {
         success: true,
         stage,
         workflow: {
-          complete: workflowResult.complete,
-          deliverables: workflowResult.deliverables,
-          readyForNextStage: workflowResult.readyForNextStage
+          complete: validationResult.complete || false,
+          deliverables: [], // Would extract from workflow results
+          readyForNextStage: summaryResult.readyForNextStage || false
         },
-        message: workflowResult.complete 
+        message: validationResult.complete 
           ? `${stage} phase completed successfully!`
           : `${stage} phase incomplete. Please review deliverables.`
       };

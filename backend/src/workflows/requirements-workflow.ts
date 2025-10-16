@@ -282,22 +282,5 @@ Generated: ${new Date().toISOString()}
         };
       }
     }
-  ] as any,
-  
-  onComplete: async ({ results }) => {
-    const validation = results['validate-completeness'];
-    const summary = results['create-stage-summary'];
-    
-    return {
-      complete: validation.complete,
-      deliverables: [
-        'REQUIREMENTS.md',
-        'ASSUMPTIONS.md',
-        'GOALS.md',
-        'DECISIONS.md',
-        'REQUIREMENTS_SUMMARY.md'
-      ],
-      readyForNextStage: summary.readyForNextStage
-    };
-  }
+  ] as any
 });

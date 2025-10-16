@@ -318,23 +318,5 @@ Generated: ${new Date().toISOString()}
         };
       }
     }
-  ] as any,
-  
-  onComplete: async ({ results }) => {
-    const validation = results['validate-completeness'];
-    const summary = results['create-stage-summary'];
-    
-    return {
-      complete: validation.complete,
-      deliverables: [
-        'ANALYSIS.md',
-        'MVP_DEFINITION.md',
-        'COMPETITIVE_ANALYSIS.md',
-        'RISK_ASSESSMENT.md',
-        'DECISIONS.md',
-        'ANALYSIS_SUMMARY.md'
-      ],
-      readyForNextStage: summary.readyForNextStage
-    };
-  }
+  ] as any
 });

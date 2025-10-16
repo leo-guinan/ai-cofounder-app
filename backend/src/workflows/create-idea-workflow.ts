@@ -294,31 +294,5 @@ ${description}
         };
       }
     }
-  ] as any,
-  
-  onComplete: async ({ results }) => {
-    const { repoName, repoUrl } = results['create-github-repo'];
-    const { branches } = results['create-waterfall-branches'];
-    const { ideaId } = results['create-idea-record'];
-    
-    return {
-      ideaId,
-      repoName,
-      repoUrl,
-      branches,
-      success: true
-    };
-  },
-  
-  onError: async ({ error }) => {
-    console.error('Create idea workflow failed:', error);
-    return {
-      ideaId: '',
-      repoName: '',
-      repoUrl: '',
-      branches: [],
-      success: false,
-      error: error.message
-    };
-  }
+  ] as any
 });

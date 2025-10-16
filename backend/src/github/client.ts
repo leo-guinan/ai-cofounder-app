@@ -10,12 +10,21 @@ import { config } from '../config';
  */
 
 export class GitHubFuturesClient {
-  private octokit: Octokit;
-  private owner: string;
+  private _octokit: Octokit;
+  private _owner: string;
   
   constructor(token: string, owner: string) {
-    this.octokit = new Octokit({ auth: token });
-    this.owner = owner;
+    this._octokit = new Octokit({ auth: token });
+    this._owner = owner;
+  }
+  
+  // Public getters for workflows and agents
+  get octokit() {
+    return this._octokit;
+  }
+  
+  get owner() {
+    return this._owner;
   }
   
   /**
@@ -24,7 +33,7 @@ export class GitHubFuturesClient {
   async createIdea(name: string, description: string): Promise<string> {
     const repoName = `idea-${name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
     
-    const repo = await this.octokit.repos.createForAuthenticatedUser({
+    const repo = await this._octokit.repos.createForAuthenticatedUser({
       name: repoName,
       description,
       private: true,
@@ -55,16 +64,16 @@ export class GitHubFuturesClient {
     ];
     
     // Get main branch SHA
-    const { data: mainBranch } = await this.octokit.repos.getBranch({
-      owner: this.owner,
+    const { data: mainBranch } = await this._octokit.repos.getBranch({
+      owner: this._owner,
       repo: repoName,
       branch: 'main'
     });
     
     // Create each stage branch
     for (const stage of stages) {
-      await this.octokit.git.createRef({
-        owner: this.owner,
+      await this._octokit.git.createRef({
+        owner: this._owner,
         repo: repoName,
         ref: `refs/heads/${stage}`,
         sha: mainBranch.commit.sha
@@ -72,21 +81,21 @@ export class GitHubFuturesClient {
     }
     
     // For implementation, create develop and production sub-branches
-    const { data: implBranch } = await this.octokit.repos.getBranch({
-      owner: this.owner,
+    const { data: implBranch } = await this._octokit.repos.getBranch({
+      owner: this._owner,
       repo: repoName,
       branch: 'implementation'
     });
     
-    await this.octokit.git.createRef({
-      owner: this.owner,
+    await this._octokit.git.createRef({
+      owner: this._owner,
       repo: repoName,
       ref: 'refs/heads/implementation/develop',
       sha: implBranch.commit.sha
     });
     
-    await this.octokit.git.createRef({
-      owner: this.owner,
+    await this._octokit.git.createRef({
+      owner: this._owner,
       repo: repoName,
       ref: 'refs/heads/implementation/production',
       sha: implBranch.commit.sha
@@ -106,8 +115,8 @@ export class GitHubFuturesClient {
     };
     
     for (const [path, content] of Object.entries(files)) {
-      await this.octokit.repos.createOrUpdateFileContents({
-        owner: this.owner,
+      await this._octokit.repos.createOrUpdateFileContents({
+        owner: this._owner,
         repo: repoName,
         path,
         message: `init: create ${path}`,
@@ -160,8 +169,8 @@ Timestamp: ${new Date().toISOString()}
 `;
     
     // Append to DECISIONS.log
-    const { data: currentFile } = await this.octokit.repos.getContent({
-      owner: this.owner,
+    const { data: currentFile } = await this._octokit.repos.getContent({
+      owner: this._owner,
       repo: repoName,
       path: 'DECISIONS.log',
       ref: branch
@@ -174,8 +183,8 @@ Timestamp: ${new Date().toISOString()}
     
     const newContent = currentContent + `\n${commitMessage}\n---\n`;
     
-    await this.octokit.repos.createOrUpdateFileContents({
-      owner: this.owner,
+    await this._octokit.repos.createOrUpdateFileContents({
+      owner: this._owner,
       repo: repoName,
       path: 'DECISIONS.log',
       message: commitMessage,
@@ -192,8 +201,8 @@ Timestamp: ${new Date().toISOString()}
    */
   async findDecision(repoName: string, decisionName: string) {
     try {
-      const { data: commits } = await this.octokit.repos.listCommits({
-        owner: this.owner,
+      const { data: commits } = await this._octokit.repos.listCommits({
+        owner: this._owner,
         repo: repoName,
         per_page: 100
       });
@@ -222,8 +231,8 @@ Timestamp: ${new Date().toISOString()}
     toStage: string,
     content: any
   ) {
-    const pr = await this.octokit.pulls.create({
-      owner: this.owner,
+    const pr = await this._octokit.pulls.create({
+      owner: this._owner,
       repo: repoName,
       title: `${fromStage} → ${toStage}: Stage transition`,
       head: toStage,
