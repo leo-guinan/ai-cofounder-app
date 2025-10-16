@@ -25,6 +25,10 @@ fastify.get('/health', async () => ({ status: 'ok' }));
 const { adminRoutes } = await import('./api/admin.js');
 fastify.register(adminRoutes, { prefix: '/admin' });
 
+// Ideas routes (Mastra workflows)
+const { ideasRoutes } = await import('./routes/ideas.js');
+fastify.register(ideasRoutes, { prefix: '/api' });
+
 // Telemetry endpoint
 fastify.post('/telemetry/report', async (request, reply) => {
   const metrics = request.body;
