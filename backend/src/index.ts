@@ -22,7 +22,7 @@ fastify.get('/', async () => ({
 fastify.get('/health', async () => ({ status: 'ok' }));
 
 // Admin routes
-const { adminRoutes } = await import('./api/admin');
+const { adminRoutes } = await import('./api/admin.js');
 fastify.register(adminRoutes, { prefix: '/admin' });
 
 // Telemetry endpoint
