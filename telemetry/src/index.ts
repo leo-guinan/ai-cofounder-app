@@ -13,13 +13,17 @@ async function collectMetrics() {
   console.log('Collected metrics:', metrics);
   
   try {
-    // Would send to central server
-    // await fetch(`${CENTRAL_URL}/telemetry/report`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(metrics)
-    // });
-    console.log('Metrics reported (simulated)');
+    const response = await fetch(`${CENTRAL_URL}/telemetry/report`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(metrics)
+    });
+    
+    if (response.ok) {
+      console.log('Metrics reported successfully');
+    } else {
+      console.error('Failed to report metrics:', response.status, response.statusText);
+    }
   } catch (error) {
     console.error('Failed to report metrics:', error);
   }

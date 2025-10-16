@@ -9,7 +9,27 @@ await fastify.register(cors);
 await fastify.register(websocket);
 
 // Routes
+fastify.get('/', async () => ({ 
+  message: 'AI Cofounder Backend API',
+  version: '0.1.0',
+  status: 'running',
+  endpoints: {
+    health: '/health',
+    admin: '/admin/*'
+  }
+}));
+
 fastify.get('/health', async () => ({ status: 'ok' }));
+
+// Admin routes
+fastify.register(import('./api/admin'), { prefix: '/admin' });
+
+// Telemetry endpoint
+fastify.post('/telemetry/report', async (request, reply) => {
+  const metrics = request.body;
+  console.log('Received telemetry:', metrics);
+  return { received: true };
+});
 
 // Start server
 const start = async () => {
