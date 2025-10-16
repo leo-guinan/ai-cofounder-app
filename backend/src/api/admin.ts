@@ -15,7 +15,7 @@ export async function adminRoutes(fastify: FastifyInstance) {
     const adminConfig = loadAdminConfig();
     const userEmail = request.headers['x-user-email'];
     
-    const isAdmin = adminConfig.admins.some(a => a.email === userEmail);
+    const isAdmin = adminConfig.admins.some((a: { email: string }) => a.email === userEmail);
     
     if (!isAdmin) {
       reply.code(403).send({ error: 'Admin access required' });
