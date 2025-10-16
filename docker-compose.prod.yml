@@ -29,6 +29,8 @@ services:
   frontend:
     build: ./frontend
     restart: always
+    ports:
+      - "80:80"
     volumes:
       - ./data:/app/data
     environment:
